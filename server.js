@@ -89,7 +89,7 @@ const Feedback = mongoose.model('Feedback', FeedbackSchema);
 
 // Initialize admin user
 async function initAdmin() {
-  const adminExists = await User.findOne({ role: 'admin' }).exec();
+  const adminExists = await User.findOne({ role: 'admin' });
   if (!adminExists) {
     await User.create({
       email: 'admin@immigration.gov.so',
@@ -130,7 +130,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email, password }).exec();
+  const user = await User.findOne({ email, password });
   if (user) {
     req.session.user = user;
     res.redirect('/app?page=dashboard');
@@ -155,9 +155,9 @@ app.all('/app', requireAuth, async (req, res) => {
     // Handle deletions via GET query params
     if (req.query.delete && req.query.table && req.query.id) {
       const { table, id } = req.query;
-      if (table === 'station') await Station.findByIdAndDelete(id).exec();
-      if (table === 'post') await Post.findByIdAndDelete(id).exec();
-      if (table === 'user') await User.findByIdAndDelete(id).exec();
+      if (table === 'station') await Station.findByIdAndDelete(id);
+      if (table === 'post') await Post.findByIdAndDelete(id);
+      if (table === 'user') await User.findByIdAndDelete(id);
       return res.redirect(`/app?page=${page}&msg=Record deleted successfully.`);
     }
 
@@ -185,7 +185,7 @@ app.all('/app', requireAuth, async (req, res) => {
           break;
         case 'save_logs':
           const { date, station_id, post_id, crossing_type } = req.body;
-          await BorderLog.deleteMany({ date, post_id, station_id }).exec();
+          await BorderLog.deleteMany({ date, post_id, station_id });
           for (const traveler_id of Object.keys(crossing_type)) {
             await BorderLog.create({
               traveler_id,
@@ -206,7 +206,7 @@ app.all('/app', requireAuth, async (req, res) => {
                 { traveler_id, post_id: visa_post_id },
                 { duration_days: days },
                 { upsert: true, new: true }
-              ).exec();
+              );
             }
           }
           success_msg = 'Visa durations saved';
@@ -221,7 +221,7 @@ app.all('/app', requireAuth, async (req, res) => {
           success_msg = 'Permit request submitted';
           break;
         case 'update_permit':
-          await PermitRequest.findByIdAndUpdate(req.body.permit_id, { status: req.body.status }).exec();
+          await PermitRequest.findByIdAndUpdate(req.body.permit_id, { status: req.body.status });
           success_msg = 'Permit status updated';
           break;
         case 'send_notification':
@@ -261,36 +261,33 @@ app.all('/app', requireAuth, async (req, res) => {
       total_posts: 0,
       log_count: 0,
       total_entries: 0,
-      total_crossings: 0,
-      fetch_date: req.query.fetch_date || '',
-      fetch_station: req.query.fetch_station || '',
-      fetch_post: req.query.fetch_post || ''
+      total_crossings: 0
     };
 
     // Always fetch stations and posts
-    data.stations = await Station.find().exec();
-    data.posts = await Post.find().populate('station_id').exec();
+    data.stations = await Station.find();
+    data.posts = await Post.find().populate('station_id');
 
     // Page-specific data fetching
     if (page === 'dashboard') {
-      data.total_travelers = await User.countDocuments({ role: 'traveler' }).exec();
-      data.total_officers = await User.countDocuments({ role: 'officer' }).exec();
-      data.total_stations = await Station.countDocuments().exec();
-      data.total_posts = await Post.countDocuments().exec();
-      data.log_count = await BorderLog.countDocuments().exec();
+      data.total_travelers = await User.countDocuments({ role: 'traveler' });
+      data.total_officers = await User.countDocuments({ role: 'officer' });
+      data.total_stations = await Station.countDocuments();
+      data.total_posts = await Post.countDocuments();
+      data.log_count = await BorderLog.countDocuments();
       if (user.role === 'traveler') {
-        data.total_entries = await BorderLog.countDocuments({ traveler_id: user._id, crossing_type: 'Entry' }).exec();
-        data.total_crossings = await BorderLog.countDocuments({ traveler_id: user._id }).exec();
+        data.total_entries = await BorderLog.countDocuments({ traveler_id: user._id, crossing_type: 'Entry' });
+        data.total_crossings = await BorderLog.countDocuments({ traveler_id: user._id });
       }
     } else if (page === 'manage_officers') {
-      data.officers = await User.find({ role: 'officer' }).exec();
+      data.officers = await User.find({ role: 'officer' });
     } else if (page === 'manage_travelers') {
-      data.travelers = await User.find({ role: 'traveler' }).populate('station_id').exec();
+      data.travelers = await User.find({ role: 'traveler' }).populate('station_id');
     } else if (page === 'manage_crossings' || page === 'log_crossings') {
       const { fetch_station, fetch_date, fetch_post } = req.query;
       if (fetch_station && fetch_date && fetch_post) {
-        data.fetched_travelers = await User.find({ role: 'traveler' }).exec();
-        const logs = await BorderLog.find({ date: fetch_date, post_id: fetch_post }).exec();
+        data.fetched_travelers = await User.find({ role: 'traveler' });
+        const logs = await BorderLog.find({ date: fetch_date, post_id: fetch_post });
         data.existing_logs = {};
         logs.forEach(log => {
           data.existing_logs[log.traveler_id] = log.crossing_type;
@@ -299,26 +296,26 @@ app.all('/app', requireAuth, async (req, res) => {
     } else if (page === 'manage_visas') {
       const { fetch_station, fetch_post } = req.query;
       if (fetch_station && fetch_post) {
-        data.visa_travelers = await User.find({ role: 'traveler' }).exec();
-        const visas = await VisaApp.find({ post_id: fetch_post }).exec();
+        data.visa_travelers = await User.find({ role: 'traveler' });
+        const visas = await VisaApp.find({ post_id: fetch_post });
         data.existing_visas = {};
         visas.forEach(visa => {
           data.existing_visas[visa.traveler_id] = visa.duration_days;
         });
       }
     } else if (page === 'notifications' && user.role === 'admin') {
-      data.permits = await PermitRequest.find().populate('user_id').sort({ created_at: -1 }).exec();
+      data.permits = await PermitRequest.find().populate('user_id').sort({ created_at: -1 });
     } else if (page === 'officer_notifs' || page === 'traveler_notifs') {
       const type = page === 'officer_notifs' ? 'officer' : 'traveler';
-      data.notifs = await Notification.find({ type }).sort({ created_at: -1 }).exec();
+      data.notifs = await Notification.find({ type }).sort({ created_at: -1 });
     } else if (page === 'apply_permit') {
-      data.my_permits = await PermitRequest.find({ user_id: user._id }).sort({ created_at: -1 }).exec();
+      data.my_permits = await PermitRequest.find({ user_id: user._id }).sort({ created_at: -1 });
     } else if (page === 'view_logs' && user.role === 'officer') {
-      data.logs = await BorderLog.find().populate('traveler_id').populate('post_id').sort({ date: -1 }).limit(50).exec();
+      data.logs = await BorderLog.find().populate('traveler_id').populate('post_id').sort({ date: -1 }).limit(50);
     } else if (page === 'my_history' && user.role === 'traveler') {
-      data.my_logs = await BorderLog.find({ traveler_id: user._id }).populate('post_id').sort({ date: -1 }).exec();
+      data.my_logs = await BorderLog.find({ traveler_id: user._id }).populate('post_id').sort({ date: -1 });
     } else if (page === 'visa_status' && user.role === 'traveler') {
-      data.visas = await VisaApp.find({ traveler_id: user._id }).populate('post_id').exec();
+      data.visas = await VisaApp.find({ traveler_id: user._id }).populate('post_id');
     }
 
     res.render('app', data);
