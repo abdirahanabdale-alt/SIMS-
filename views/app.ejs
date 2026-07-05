@@ -149,7 +149,7 @@
         <a href="/app?page=manage_visas" class="<%= page === 'manage_visas' ? 'active' : '' %>">
           <i class="fas fa-file-alt"></i> Manage Visas
         </a>
-        <a href="/app?page=view_logs" class="<%= page === 'view_logs' ? 'active' : '%>">
+        <a href="/app?page=view_logs" class="<%= page === 'view_logs' ? 'active' : '' %>">
           <i class="fas fa-history"></i> View Logs
         </a>
       <% } %>
@@ -194,7 +194,7 @@
   <!-- Main content -->
   <div class="main-content">
     <div class="navbar d-flex justify-content-between align-items-center">
-      <h4 class="mb-0 text-capitalize"><%= page.replace('_', ' ') %></h4>
+      <h4 class="mb-0 text-capitalize"><%= page.replace(/_/g, ' ') %></h4>
       <div class="d-flex align-items-center gap-3">
         <span class="text-muted">Welcome,</span>
         <span class="fw-bold"><%= user.full_name %></span>
@@ -508,13 +508,13 @@
           <input type="hidden" name="page" value="log_crossings">
           <div class="row g-3">
             <div class="col-md-3">
-              <input type="date" name="fetch_date" class="form-control" value="<%= req.query.fetch_date || '' %>" required>
+              <input type="date" name="fetch_date" class="form-control" value="<%= typeof fetch_date !== 'undefined' ? fetch_date : '' %>" required>
             </div>
             <div class="col-md-3">
               <select name="fetch_station" class="form-control" required>
                 <option value="">Select Station</option>
                 <% stations.forEach(station => { %>
-                  <option value="<%= station._id %>" <%= req.query.fetch_station == station._id ? 'selected' : '' %>><%= station.name %></option>
+                  <option value="<%= station._id %>" <%= fetch_station == station._id ? 'selected' : '' %>><%= station.name %></option>
                 <% }) %>
               </select>
             </div>
@@ -522,7 +522,7 @@
               <select name="fetch_post" class="form-control" required>
                 <option value="">Select Post</option>
                 <% posts.forEach(post => { %>
-                  <option value="<%= post._id %>" <%= req.query.fetch_post == post._id ? 'selected' : '' %>><%= post.name %></option>
+                  <option value="<%= post._id %>" <%= fetch_post == post._id ? 'selected' : '' %>><%= post.name %></option>
                 <% }) %>
               </select>
             </div>
@@ -532,14 +532,14 @@
           </div>
         </form>
       </div>
-      <% if (fetched_travelers.length) { %>
+      <% if (fetched_travelers && fetched_travelers.length) { %>
         <div class="metric-card">
           <h5>Log Crossings</h5>
           <form method="POST" action="/app">
             <input type="hidden" name="action" value="save_logs">
-            <input type="hidden" name="date" value="<%= req.query.fetch_date %>">
-            <input type="hidden" name="station_id" value="<%= req.query.fetch_station %>">
-            <input type="hidden" name="post_id" value="<%= req.query.fetch_post %>">
+            <input type="hidden" name="date" value="<%= fetch_date %>">
+            <input type="hidden" name="station_id" value="<%= fetch_station %>">
+            <input type="hidden" name="post_id" value="<%= fetch_post %>">
             <table class="table table-bordered">
               <thead>
                 <tr>
@@ -576,7 +576,7 @@
               <select name="fetch_station" class="form-control" required>
                 <option value="">Select Station</option>
                 <% stations.forEach(station => { %>
-                  <option value="<%= station._id %>" <%= req.query.fetch_station == station._id ? 'selected' : '' %>><%= station.name %></option>
+                  <option value="<%= station._id %>" <%= fetch_station == station._id ? 'selected' : '' %>><%= station.name %></option>
                 <% }) %>
               </select>
             </div>
@@ -584,7 +584,7 @@
               <select name="fetch_post" class="form-control" required>
                 <option value="">Select Post</option>
                 <% posts.forEach(post => { %>
-                  <option value="<%= post._id %>" <%= req.query.fetch_post == post._id ? 'selected' : '' %>><%= post.name %></option>
+                  <option value="<%= post._id %>" <%= fetch_post == post._id ? 'selected' : '' %>><%= post.name %></option>
                 <% }) %>
               </select>
             </div>
@@ -594,12 +594,12 @@
           </div>
         </form>
       </div>
-      <% if (visa_travelers.length) { %>
+      <% if (visa_travelers && visa_travelers.length) { %>
         <div class="metric-card">
           <h5>Manage Visas</h5>
           <form method="POST" action="/app">
             <input type="hidden" name="action" value="save_visas">
-            <input type="hidden" name="post_id" value="<%= req.query.fetch_post %>">
+            <input type="hidden" name="post_id" value="<%= fetch_post %>">
             <table class="table table-bordered">
               <thead>
                 <tr>
