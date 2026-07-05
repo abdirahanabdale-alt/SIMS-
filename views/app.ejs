@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Somaliland Immigration - <%= page.charAt(0).toUpperCase() + page.slice(1) %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-bg: #1B1C31;
+      --bg-color: #F4F7FE;
+      --accent: #00A859;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 0;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 260px;
+      background-color: var(--sidebar-bg);
+      color: white;
+      padding: 20px 0;
+      overflow-y: auto;
+    }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 20px;
+    }
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #006837, var(--accent));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .sidebar-nav a {
+      display: block;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      padding: 12px 20px;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .sidebar-nav a:hover, .sidebar-nav a.active {
+      color: white;
+      background-color: rgba(255,255,255,0.05);
+      border-left-color: var(--accent);
+    }
+    .sidebar-nav a i {
+      width: 20px;
+      text-align: center;
+      margin-right: 10px;
+    }
+    .main-content {
+      margin-left: 260px;
+      padding: 20px;
+    }
+    .navbar {
+      background-color: white;
+      border-radius: 12px;
+      padding: 15px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    .metric-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    .metric-number {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .metric-label {
+      font-size: 14px;
+      color: #6c757d;
+    }
+    .btn-success {
+      background-color: var(--accent);
+      border-color: var(--accent);
+    }
+    .btn-success:hover {
+      background-color: #008F4A;
+      border-color: #008F4A;
+    }
+    .badge-entry {
+      background-color: #28a745;
+    }
+    .badge-exit {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">SL</div>
+      <div>
+        <div class="fw-bold">Somaliland Immigration</div>
+        <div class="small text-muted">CMS</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/app?page=dashboard" class="<%= page === 'dashboard' ? 'active' : '' %>">
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+      </a>
+      <% if (user.role === 'admin' || user.role === 'officer') { %>
+        <a href="/app?page=stations" class="<%= page === 'stations' ? 'active' : '' %>">
+          <i class="fas fa-building"></i> Stations
+        </a>
+        <a href="/app?page=posts" class="<%= page === 'posts' ? 'active' : '' %>">
+          <i class="fas fa-map-marker-alt"></i> Posts
+        </a>
+      <% } %>
+      <% if (user.role === 'admin') { %>
+        <a href="/app?page=manage_officers" class="<%= page === 'manage_officers' ? 'active' : '' %>">
+          <i class="fas fa-user-shield"></i> Manage Officers
+        </a>
+        <a href="/app?page=manage_travelers" class="<%= page === 'manage_travelers' ? 'active' : '' %>">
+          <i class="fas fa-users"></i> Manage Travelers
+        </a>
+      <% } %>
+      <% if (user.role === 'officer') { %>
+        <a href="/app?page=log_crossings" class="<%= page === 'log_crossings' ? 'active' : '' %>">
+          <i class="fas fa-passport"></i> Log Crossings
+        </a>
+        <a href="/app?page=manage_visas" class="<%= page === 'manage_visas' ? 'active' : '' %>">
+          <i class="fas fa-file-alt"></i> Manage Visas
+        </a>
+        <a href="/app?page=view_logs" class="<%= page === 'view_logs' ? 'active' : '%>">
+          <i class="fas fa-history"></i> View Logs
+        </a>
+      <% } %>
+      <% if (user.role === 'traveler') { %>
+        <a href="/app?page=my_history" class="<%= page === 'my_history' ? 'active' : '' %>">
+          <i class="fas fa-history"></i> My History
+        </a>
+        <a href="/app?page=visa_status" class="<%= page === 'visa_status' ? 'active' : '' %>">
+          <i class="fas fa-file-alt"></i> Visa Status
+        </a>
+        <a href="/app?page=apply_permit" class="<%= page === 'apply_permit' ? 'active' : '' %>">
+          <i class="fas fa-file-signature"></i> Apply Permit
+        </a>
+      <% } %>
+      <% if (user.role === 'admin') { %>
+        <a href="/app?page=notifications" class="<%= page === 'notifications' ? 'active' : '' %>">
+          <i class="fas fa-bell"></i> Permit Requests
+        </a>
+        <a href="/app?page=notify" class="<%= page === 'notify' ? 'active' : '' %>">
+          <i class="fas fa-broadcast-tower"></i> Broadcast
+        </a>
+      <% } %>
+      <% if (user.role === 'officer') { %>
+        <a href="/app?page=officer_notifs" class="<%= page === 'officer_notifs' ? 'active' : '' %>">
+          <i class="fas fa-bell"></i> Notifications
+        </a>
+      <% } %>
+      <% if (user.role === 'traveler') { %>
+        <a href="/app?page=traveler_notifs" class="<%= page === 'traveler_notifs' ? 'active' : '' %>">
+          <i class="fas fa-bell"></i> Notifications
+        </a>
+        <a href="/app?page=feedback" class="<%= page === 'feedback' ? 'active' : '' %>">
+          <i class="fas fa-comment"></i> Feedback
+        </a>
+      <% } %>
+      <a href="/logout" class="text-danger">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </nav>
+  </div>
+
+  <!-- Main content -->
+  <div class="main-content">
+    <div class="navbar d-flex justify-content-between align-items-center">
+      <h4 class="mb-0 text-capitalize"><%= page.replace('_', ' ') %></h4>
+      <div class="d-flex align-items-center gap-3">
+        <span class="text-muted">Welcome,</span>
+        <span class="fw-bold"><%= user.full_name %></span>
+        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+          <i class="fas fa-user text-muted"></i>
+        </div>
+      </div>
+    </div>
+
+    <% if (success_msg) { %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= success_msg %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+
+    <!-- Page content -->
+    <% if (page === 'dashboard') { %>
+      <div class="row">
+        <div class="col-md-2">
+          <div class="metric-card text-center">
+            <div class="metric-number"><%= total_stations %></div>
+            <div class="metric-label">Stations</div>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="metric-card text-center">
+            <div class="metric-number"><%= total_posts %></div>
+            <div class="metric-label">Posts</div>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="metric-card text-center">
+            <div class="metric-number"><%= log_count %></div>
+            <div class="metric-label">Crossings</div>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="metric-card text-center">
+            <div class="metric-number"><%= total_travelers %></div>
+            <div class="metric-label">Travelers</div>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="metric-card text-center">
+            <div class="metric-number"><%= total_officers %></div>
+            <div class="metric-label">Officers</div>
+          </div>
+        </div>
+        <% if (user.role === 'traveler') { %>
+          <div class="col-md-2">
+            <div class="metric-card text-center">
+              <div class="metric-number"><%= total_entries %></div>
+              <div class="metric-label">My Entries</div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <div class="metric-card">
+            <h5>Border Entries vs Exits</h5>
+            <canvas id="crossingsChart" height="200"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="metric-card">
+            <h5>Visa Status</h5>
+            <canvas id="visaChart" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+      <script>
+        new Chart(document.getElementById('crossingsChart'), {
+          type: 'line',
+          data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [
+              { label: 'Entries', data: [65, 59, 80, 81, 56, 55], borderColor: '#28a745', backgroundColor: 'rgba(40,167,69,0.1)' },
+              { label: 'Exits', data: [28, 48, 40, 19, 86, 27], borderColor: '#dc3545', backgroundColor: 'rgba(220,53,69,0.1)' }
+            ]
+          }
+        });
+        new Chart(document.getElementById('visaChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Approved', 'Pending', 'Rejected'],
+            datasets: [{
+              data: [60, 30, 10],
+              backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+            }]
+          }
+        });
+      </script>
+    <% } else if (page === 'stations') { %>
+      <div class="metric-card">
+        <h5>Add Station</h5>
+        <form method="POST" action="/app">
+          <input type="hidden" name="action" value="add_station">
+          <div class="row">
+            <div class="col-md-5">
+              <input type="text" name="name" class="form-control" placeholder="Station Name" required>
+            </div>
+            <div class="col-md-5">
+              <select name="type" class="form-control" required>
+                <option value="">Select Type</option>
+                <option value="Airport">Airport</option>
+                <option value="Seaport">Seaport</option>
+                <option value="Border_Crossing">Border Crossing</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-success w-100">Add</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="metric-card">
+        <h5>Stations</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% stations.forEach(station => { %>
+              <tr>
+                <td><%= station.name %></td>
+                <td><%= station.type %></td>
+                <td>
+                  <a href="/app?page=stations&delete=1&table=station&id=<%= station._id %>" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else if (page === 'posts') { %>
+      <div class="metric-card">
+        <h5>Add Post</h5>
+        <form method="POST" action="/app">
+          <input type="hidden" name="action" value="add_post">
+          <div class="row">
+            <div class="col-md-5">
+              <input type="text" name="name" class="form-control" placeholder="Post Name" required>
+            </div>
+            <div class="col-md-5">
+              <select name="station_id" class="form-control" required>
+                <option value="">Select Station</option>
+                <% stations.forEach(station => { %>
+                  <option value="<%= station._id %>"><%= station.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-success w-100">Add</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="metric-card">
+        <h5>Posts</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Station</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% posts.forEach(post => { %>
+              <tr>
+                <td><%= post.name %></td>
+                <td><%= post.station_id.name %></td>
+                <td>
+                  <a href="/app?page=posts&delete=1&table=post&id=<%= post._id %>" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else if (page === 'manage_officers') { %>
+      <div class="metric-card">
+        <h5>Add Officer</h5>
+        <form method="POST" action="/app">
+          <input type="hidden" name="action" value="add_officer">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <input type="text" name="full_name" class="form-control" placeholder="Full Name" required>
+            </div>
+            <div class="col-md-3">
+              <input type="email" name="email" class="form-control" placeholder="Email" required>
+            </div>
+            <div class="col-md-2">
+              <select name="gender" class="form-control" required>
+                <option value="">Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <select name="station_id" class="form-control" required>
+                <option value="">Station</option>
+                <% stations.forEach(station => { %>
+                  <option value="<%= station._id %>"><%= station.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-success w-100">Add</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="metric-card">
+        <h5>Officers</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Gender</th>
+              <th>Station</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% officers.forEach(officer => { %>
+              <tr>
+                <td><%= officer.full_name %></td>
+                <td><%= officer.email %></td>
+                <td><%= officer.gender %></td>
+                <td><%= officer.station_id ? officer.station_id.name : '-' %></td>
+                <td>
+                  <a href="/app?page=manage_officers&delete=1&table=user&id=<%= officer._id %>" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else if (page === 'manage_travelers') { %>
+      <div class="metric-card">
+        <h5>Add Traveler</h5>
+        <form method="POST" action="/app">
+          <input type="hidden" name="action" value="add_traveler">
+          <div class="row g-3">
+            <div class="col-md-2">
+              <input type="text" name="full_name" class="form-control" placeholder="Full Name" required>
+            </div>
+            <div class="col-md-2">
+              <input type="email" name="email" class="form-control" placeholder="Email" required>
+            </div>
+            <div class="col-md-2">
+              <input type="text" name="passport_number" class="form-control" placeholder="Passport No" required>
+            </div>
+            <div class="col-md-2">
+              <input type="text" name="nationality" class="form-control" placeholder="Nationality" required>
+            </div>
+            <div class="col-md-2">
+              <select name="gender" class="form-control" required>
+                <option value="">Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-success w-100">Add</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="metric-card">
+        <h5>Travelers</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Passport</th>
+              <th>Nationality</th>
+              <th>Gender</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% travelers.forEach(traveler => { %>
+              <tr>
+                <td><%= traveler.full_name %></td>
+                <td><%= traveler.email %></td>
+                <td><%= traveler.passport_number %></td>
+                <td><%= traveler.nationality %></td>
+                <td><%= traveler.gender %></td>
+                <td>
+                  <a href="/app?page=manage_travelers&delete=1&table=user&id=<%= traveler._id %>" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else if (page === 'log_crossings') { %>
+      <div class="metric-card">
+        <h5>Filter Crossings</h5>
+        <form method="GET" action="/app">
+          <input type="hidden" name="page" value="log_crossings">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <input type="date" name="fetch_date" class="form-control" value="<%= req.query.fetch_date || '' %>" required>
+            </div>
+            <div class="col-md-3">
+              <select name="fetch_station" class="form-control" required>
+                <option value="">Select Station</option>
+                <% stations.forEach(station => { %>
+                  <option value="<%= station._id %>" <%= req.query.fetch_station == station._id ? 'selected' : '' %>><%= station.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select name="fetch_post" class="form-control" required>
+                <option value="">Select Post</option>
+                <% posts.forEach(post => { %>
+                  <option value="<%= post._id %>" <%= req.query.fetch_post == post._id ? 'selected' : '' %>><%= post.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-success w-100">Fetch</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <% if (fetched_travelers.length) { %>
+        <div class="metric-card">
+          <h5>Log Crossings</h5>
+          <form method="POST" action="/app">
+            <input type="hidden" name="action" value="save_logs">
+            <input type="hidden" name="date" value="<%= req.query.fetch_date %>">
+            <input type="hidden" name="station_id" value="<%= req.query.fetch_station %>">
+            <input type="hidden" name="post_id" value="<%= req.query.fetch_post %>">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Traveler</th>
+                  <th>Entry</th>
+                  <th>Exit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% fetched_travelers.forEach(traveler => { %>
+                  <tr>
+                    <td><%= traveler.full_name %></td>
+                    <td>
+                      <input type="radio" name="crossing_type[<%= traveler._id %>]" value="Entry" <%= existing_logs[traveler._id] === 'Entry' ? 'checked' : '' %>>
+                    </td>
+                    <td>
+                      <input type="radio" name="crossing_type[<%= traveler._id %>]" value="Exit" <%= existing_logs[traveler._id] === 'Exit' ? 'checked' : '' %>>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+            <button type="submit" class="btn btn-success">Save Logs</button>
+          </form>
+        </div>
+      <% } %>
+    <% } else if (page === 'manage_visas') { %>
+      <div class="metric-card">
+        <h5>Filter Visas</h5>
+        <form method="GET" action="/app">
+          <input type="hidden" name="page" value="manage_visas">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <select name="fetch_station" class="form-control" required>
+                <option value="">Select Station</option>
+                <% stations.forEach(station => { %>
+                  <option value="<%= station._id %>" <%= req.query.fetch_station == station._id ? 'selected' : '' %>><%= station.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select name="fetch_post" class="form-control" required>
+                <option value="">Select Post</option>
+                <% posts.forEach(post => { %>
+                  <option value="<%= post._id %>" <%= req.query.fetch_post == post._id ? 'selected' : '' %>><%= post.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <button type="submit" class="btn btn-success w-100">Fetch</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <% if (visa_travelers.length) { %>
+        <div class="metric-card">
+          <h5>Manage Visas</h5>
+          <form method="POST" action="/app">
+            <input type="hidden" name="action" value="save_visas">
+            <input type="hidden" name="post_id" value="<%= req.query.fetch_post %>">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Traveler</th>
+                  <th>Duration (Days)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% visa_travelers.forEach(traveler => { %>
+                  <tr>
+                    <td><%= traveler.full_name %></td>
+                    <td>
+                      <input type="number" name="duration_days[<%= traveler._id %>]" class="form-control" value="<%= existing_visas[traveler._id] || '' %>" min="1">
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+            <button type="submit" class="btn btn-success">Save</button>
+          </form>
+        </div>
+      <% } %>
+    <% } else if (page === 'apply_permit') { %>
+      <div class="metric-card">
+        <h5>Apply for Permit</h5>
+        <form method="POST" action="/app">
+          <input type="hidden" name="action" value="apply_permit">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <input type="date" name="date" class="form-control" required>
+            </div>
+            <div class="col-md-7">
+              <input type="text" name="message" class="form-control" placeholder="Reason" required>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-success w-100">Apply</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="metric-card">
+        <h5>My Permits</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Reason</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% my_permits.forEach(permit => { %>
+              <tr>
+                <td><%= permit.date %></td>
+                <td><%= permit.message %></td>
+                <td>
+                  <span class="badge bg-<%= permit.status === 'Approved' ? 'success' : permit.status === 'Rejected' ? 'danger' : 'warning' %>">
+                    <%= permit.status %>
+                  </span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else if (page === 'notifications') { %>
+      <div class="metric-card">
+        <h5>Permit Requests</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Date</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% permits.forEach(permit => { %>
+              <tr>
+                <td><%= permit.user_id.full_name %></td>
+                <td><%= permit.date %></td>
+                <td><%= permit.message %></td>
+                <td>
+                  <span class="badge bg-<%= permit.status === 'Approved' ? 'success' : permit.status === 'Rejected' ? 'danger' : 'warning' %>">
+                    <%= permit.status %>
+                  </span>
+                </td>
+                <td>
+                  <% if (permit.status === 'Pending') { %>
+                    <form method="POST" action="/app" class="d-inline">
+                      <input type="hidden" name="action" value="update_permit">
+                      <input type="hidden" name="permit_id" value="<%= permit._id %>">
+                      <input type="hidden" name="status" value="Approved">
+                      <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                    </form>
+                    <form method="POST" action="/app" class="d-inline">
+                      <input type="hidden" name="action" value="update_permit">
+                      <input type="hidden" name="permit_id" value="<%= permit._id %>">
+                      <input type="hidden" name="status" value="Rejected">
+                      <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else if (page === 'notify') { %>
+      <div class="metric-card">
+        <h5>Send Notification</h5>
+        <form method="POST" action="/app">
+          <input type="hidden" name="action" value="send_notification">
+          <div class="mb-3">
+            <label class="form-label">Audience</label>
+            <select name="type" class="form-control" required>
+              <option value="officer">Officers</option>
+              <option value="traveler">Travelers</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" rows="4" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-success">Send</button>
+        </form>
+      </div>
+    <% } else if (page === 'officer_notifs' || page === 'traveler_notifs') { %>
+      <div class="metric-card">
+        <h5>Notifications</h5>
+        <% notifs.forEach(notif => { %>
+          <div class="alert alert-info">
+            <div class="d-flex justify-content-between">
+              <div><%= notif.message %></div>
+              <div class="text-muted small"><%= notif.created_at.toLocaleDateString() %></div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else if (page === 'view_logs') { %>
+      <div class="metric-card">
+        <h5>Crossing Logs</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Traveler</th>
+              <th>Post</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% logs.forEach(log => { %>
+              <tr>
+                <td><%= log.date %></td>
+                <td><%= log.traveler_id.full_name %></td>
+                <td><%= log.post_id.name %></td>
+                <td>
+                  <span class="badge badge-<%= log.crossing_type.toLowerCase() %>">
+                    <%= log.crossing_type %>
+                  </span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else if (page === 'my_history') { %>
+      <div class="metric-card">
+        <h5>My Crossing History</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Post</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% my_logs.forEach(log => { %>
+              <tr>
+                <td><%= log.date %></td>
+                <td><%= log.post_id.name %></td>
+                <td>
+                  <span class="badge badge-<%= log.crossing_type.toLowerCase() %>">
+                    <%= log.crossing_type %>
+                  </span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else if (page === 'visa_status') { %>
+      <div class="row">
+        <% visas.forEach(visa => { %>
+          <div class="col-md-4">
+            <div class="metric-card text-center">
+              <h5><%= visa.post_id.name %></h5>
+              <div class="metric-number"><%= visa.duration_days %> days</div>
+              <div class="metric-label">Visa Duration</div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else if (page === 'feedback') { %>
+      <div class="metric-card">
+        <h5>Send Feedback</h5>
+        <form method="POST" action="/app">
+          <input type="hidden" name="action" value="send_feedback">
+          <div class="mb-3">
+            <textarea name="message" class="form-control" rows="4" placeholder="Your feedback..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-success">Submit</button>
+        </form>
+      </div>
+    <% } %>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
